@@ -1,0 +1,36 @@
+{
+  "name": "vibe-iter",
+  "private": true,
+  "version": "0.3.2",
+  "description": "Local-first Chrome playtest recorder. Play, talk, and hand the context to your coding agent.",
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "voice": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-local.ps1",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "package": "npm run build && node scripts/package-extension.mjs",
+    "package:check": "node scripts/package-extension.mjs --check",
+    "audit:public": "node scripts/audit-public.mjs",
+    "export:public": "node scripts/export-public.mjs",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "fflate": "^0.8.3",
+    "lucide-react": "^0.468.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.284",
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5"
+  }
+}

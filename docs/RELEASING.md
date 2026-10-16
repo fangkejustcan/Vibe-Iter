@@ -1,0 +1,37 @@
+# 发布
+
+## 首次公开
+
+1. 检查 README 中仓库、视频和插件下载链接是否指向自己的 GitHub 仓库。
+2. 运行 `npm ci`、`npm test`、`npm run audit:public` 和 `npm run package`。
+3. `npm run export:public` 导出到新的 `.local/open-source/`，只包含允许公开的文件，不携带 Git 历史、私有录音、测试结果或视频制作过程。
+4. 在导出目录初始化新的 Git 仓库，再推送到 GitHub。不要直接把包含旧私人记录引用的工作区历史推上去。
+
+导出目录已存在时脚本会拒绝覆盖，可指定另一空目录：
+
+```bash
+npm run export:public -- .local/open-source-next
+```
+
+## 发布插件
+
+保持 `package.json`、`public/manifest.json`、`src/shared/protocol.ts` 和 `package-lock.json` 的版本一致。构建验证后推送 `v` 开头的版本标签：
+
+```bash
+git tag v0.3.2
+git push origin main --tags
+```
+
+GitHub Actions 会在独立构建任务中测试、审查并打包。只有校验通过且标签与版本一致时，发行任务才获得 `contents: write` 权限，创建 Release，上传：
+
+- `vibe-iter-chrome.zip`
+- `SHA256SUMS.txt`
+- `vibe-iter-demo.mp4`
+
+README 的固定下载入口使用 `releases/latest/download/vibe-iter-chrome.zip`，每次发布无需修改版本链接。插件 ZIP 的根目录直接包含 `manifest.json`。不要发布 `.crx` 私钥、个人浏览器目录或测试录制包。
+
+## 视频展示
+
+README 使用图片封面链接到仓库中提供的 1080p MP4。GitHub 对普通仓库文件的 README 内嵌播放器支持有限，这个入口可打开或下载视频。若要显示 GitHub 原生播放器，可在 GitHub 编辑 README 时上传 `docs/assets/demo.mp4`，把实际生成的 `user-attachments` 地址放到封面下方；不要手写不存在的附件地址。
+
+视频单独保存在源码仓库及 Release 中，不进入插件 ZIP。更换演示视频前，检查音频、画面、浏览器界面、字幕和媒体元数据。

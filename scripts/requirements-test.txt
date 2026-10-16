@@ -1,0 +1,5 @@
+-r requirements-voice.txt
+playwright>=1.51,<2
+numpy>=1.26,<3
+websocket-client>=1.8,<2
+pywin32>=308; sys_platform == "win32"

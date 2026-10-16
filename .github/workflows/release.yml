@@ -1,0 +1,44 @@
+name: Publish Chrome extension
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Check release version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: node --input-type=module -e "import fs from 'node:fs'; if (process.env.RELEASE_TAG !== 'v'+JSON.parse(fs.readFileSync('package.json')).version) process.exit(1)"
+      - run: npm test
+      - run: npm run audit:public -- --tracked
+      - run: npm run package
+      - run: cp docs/assets/demo.mp4 release/vibe-iter-demo.mp4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-files
+          path: release/
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-files
+          path: release
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: gh release create "$RELEASE_TAG" release/* --verify-tag --title "Vibe Iter $RELEASE_TAG" --notes "Chrome 扩展安装包：下载 vibe-iter-chrome.zip，解压后在 chrome://extensions 加载。录制与导出无需服务器；语音转文字需要可选的本机 Whisper 服务。安装步骤见仓库 README。"

@@ -1,0 +1,18 @@
+name: Bug report / 问题反馈
+description: 使用测试数据描述可复现的问题
+body:
+  - type: markdown
+    attributes:
+      value: 请勿附上个人录音、私人页面截图、凭证或完整试玩包。
+  - type: input
+    id: version
+    attributes:
+      label: 插件与 Chrome 版本
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤、预期行为与实际行为
+    validations:
+      required: true

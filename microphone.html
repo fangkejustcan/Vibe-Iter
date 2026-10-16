@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vibe Iter v0.2.0 · 麦克风授权与测试</title>
+  </head>
+  <body>
+    <main class="shell microphone-setup">
+      <p class="section-kicker">VIBE ITER / MICROPHONE</p>
+      <h1>麦克风授权与测试 <small>v0.2.0</small></h1>
+      <p>首次使用需要在这个独立页面完成授权。点击下面的按钮，然后在 Chrome 的提示中选择“允许”。</p>
+      <button id="allow" class="button button-primary">允许麦克风</button>
+      <p id="status" role="status" aria-live="polite"></p>
+      <div class="mic-meter"><span>麦克风输入</span><meter id="meter" aria-label="麦克风音量" min="0" max="100" value="0"></meter></div>
+      <p id="service">正在检查本机转录服务…</p>
+      <button id="test" class="button button-primary" disabled>录 5 秒测试本机转录</button>
+      <p id="result" aria-live="polite">授权后，可以先在这里测试说话是否能变成文字。</p>
+      <button id="return" class="button button-quiet" hidden>返回游戏</button>
+      <details>
+        <summary>没有弹出授权提示，或之前点了拒绝？</summary>
+        <p>打开 Chrome 设置 → 隐私和安全 → 网站设置 → 麦克风，在“不允许使用麦克风”的列表里移除 Vibe Iter，然后回来重试。也请检查 Windows 设置 → 隐私和安全性 → 麦克风，允许桌面应用访问，并确认 Chrome 使用了正确的输入设备。</p>
+      </details>
+      <p class="helper">默认使用本机 Whisper，录音和转录不发送到云端。本机服务未启动时，在项目目录运行 <code>npm run voice</code>。录音保存在项目的 <code>.local/voice-clips</code> 目录。</p>
+    </main>
+    <script type="module" src="/src/microphone.ts"></script>
+  </body>
+</html>

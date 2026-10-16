@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#103a40" />
+  <title>潮汐邮局 / Tidal Post</title>
+  <link rel="stylesheet" href="./game.css" />
+</head>
+<body>
+  <main class="game-shell">
+    <header class="topbar">
+      <div class="brand"><span class="postmark" aria-hidden="true">〒</span><div><h1>潮汐邮局</h1><span class="edition">第七个清晨</span></div></div>
+      <div class="top-actions">
+        <span class="delivery-count" aria-label="投递进度"><span aria-hidden="true">✉</span> <strong id="progress-text">0 / 3</strong></span>
+        <button class="icon-button" id="help-toggle" aria-label="玩法帮助" aria-expanded="false" aria-controls="help-panel">?</button>
+        <button class="icon-button" id="settings-toggle" aria-label="打开设置" aria-expanded="false" aria-controls="settings-panel">⚙</button>
+      </div>
+    </header>
+    <section class="world" id="game-board" aria-label="可以航行的群岛">
+      <canvas id="map" tabindex="0" aria-label="潮汐航线地图：点击海面航行，或使用方向键驾驶"></canvas>
+      <svg id="routes" aria-hidden="true"><path data-from="lighthouse" data-to="chime"></path><path data-from="chime" data-to="moon"></path><path data-from="moon" data-to="lighthouse"></path></svg>
+      <div class="sea-caption" aria-hidden="true">归 航 海</div>
+      <div class="compass" aria-hidden="true"><span>N</span><i></i></div>
+      <button class="island" data-island="灯塔岛" data-key="lighthouse" aria-label="前往灯塔岛" aria-describedby="tip-lighthouse"><span class="island-halo"></span><span class="island-name">灯塔岛 <i class="arrival-mark" aria-hidden="true">✓</i></span><span class="island-tip" id="tip-lighthouse" role="tooltip">塔顶的灯彻夜不熄。守塔人总在等一艘归来的船。</span></button>
+      <button class="island" data-island="风铃岛" data-key="chime" aria-label="前往风铃岛" aria-describedby="tip-chime"><span class="island-halo"></span><span class="island-name">风铃岛 <i class="arrival-mark" aria-hidden="true">✓</i></span><span class="island-tip" id="tip-chime" role="tooltip">家家屋檐挂着风铃。阿铃说，海风也会唱歌。</span></button>
+      <button class="island" data-island="月湾岛" data-key="moon" aria-label="前往月湾岛" aria-describedby="tip-moon"><span class="island-halo"></span><span class="island-name">月湾岛 <i class="arrival-mark" aria-hidden="true">✓</i></span><span class="island-tip" id="tip-moon" role="tooltip">退潮后会露出月牙形沙滩。小满常在礁石旁看海。</span></button>
+      <div id="waypoint" class="waypoint hidden" aria-hidden="true"></div>
+      <div class="boat" id="boat" role="img" aria-label="邮船，停泊中" data-sailing="false"><svg viewBox="0 0 56 64" aria-hidden="true"><path d="M9 47 Q28 58 47 47 L40 59 Q28 65 16 59Z" fill="#e98d72"/><path d="M28 5V48" stroke="#f5e7c4" stroke-width="2.5"/><path d="M24 9L6 42H24Z" fill="#f5e7c4"/><path d="M32 18L46 41H32Z" fill="#d4dc9b"/><path d="M8 48H48" stroke="#f5e7c4" stroke-width="2"/></svg></div>
+    </section>
+    <aside class="mailbag" aria-label="今日邮包">
+      <div class="bag-heading"><span>今日邮包</span><span id="bag-count">三封信，三个等待的人</span></div>
+      <div class="mail-stack" id="mail-stack">
+        <button class="mail" draggable="true" data-letter="一盏留给归人的灯" data-key="light" aria-label="阅读一盏留给归人的灯" aria-pressed="false"><span class="envelope" aria-hidden="true">✉</span><span>归人的灯</span><i aria-hidden="true">01</i></button>
+        <button class="mail" draggable="true" data-letter="风里的新歌" data-key="song" aria-label="阅读风里的新歌" aria-pressed="false"><span class="envelope" aria-hidden="true">✉</span><span>风里的新歌</span><i aria-hidden="true">02</i></button>
+        <button class="mail" draggable="true" data-letter="今晚一起看潮汐" data-key="tide" aria-label="阅读今晚一起看潮汐" aria-pressed="false"><span class="envelope" aria-hidden="true">✉</span><span>一起看潮汐</span><i aria-hidden="true">03</i></button>
+      </div>
+      <article class="letter-sheet" id="letter-sheet" aria-labelledby="letter-title">
+        <div class="letter-meta" id="letter-meta">地址被海水打湿了</div>
+        <h2 id="letter-title">有些地址，写在故事里。</h2>
+        <p id="letter-copy">先选一封信。读一读留下的线索，猜猜是谁在等它，再驾驶邮船送过去。</p>
+        <div id="letter-action" class="letter-action">↑ 选一封信，开始今天的航行</div>
+      </article>
+    </aside>
+    <div class="status-bar"><span class="status-lamp" aria-hidden="true"></span><p id="brief" role="status">早安，邮差。今天，海风会替你带路。</p></div>
+    <section class="popover hidden" id="help-panel" aria-label="玩法帮助">
+      <h2>跟着信里的线索走</h2>
+      <ol><li>从邮包里选一封信，读一读。</li><li>把鼠标放在岛上了解故事；触屏可以先点岛探访。</li><li>猜好目的地后点岛，邮船靠岸时会尝试投递。</li></ol>
+      <p>点击海面自由航行，方向键也能驾驶。信件可以直接拖到岛上。猜错了也没关系，再读读线索。</p>
+      <button class="small-button" id="help-close">知道了</button>
+    </section>
+    <section class="popover hidden" id="settings-panel" aria-label="甲板设置">
+      <h2>甲板设置</h2>
+      <label>显示岛间航线 <input id="route-toggle" type="checkbox" checked /></label>
+      <label>投递提示音 <input id="sound-toggle" type="checkbox" /></label>
+      <button class="small-button" id="reset">重新整理邮包</button>
+    </section>
+    <dialog id="modal" aria-labelledby="modal-title" aria-describedby="modal-copy">
+      <span class="completion-stamp" aria-hidden="true">已 妥 投</span><p class="letter-meta">今日航线 · 完成</p>
+      <h2 id="modal-title">每一封信，都有了回音。</h2>
+      <p id="modal-copy">灯塔亮了，风铃响了，月湾有人在等。<br />原来三封信都在说同一件事：<br /><strong>「我会回来。」</strong></p>
+      <div class="modal-actions"><button id="modal-close" class="primary-button">继续航行</button><button id="play-again" class="text-button">再送一次</button></div>
+    </dialog>
+  </main>
+  <script src="./game.js" defer></script>
+</body>
+</html>
