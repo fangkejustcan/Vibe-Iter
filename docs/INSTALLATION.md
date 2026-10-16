@@ -1,6 +1,6 @@
 # 安装与首次录制
 
-第一次安装？可以先看[让 ZCode / Codex / WorkBuddy 帮你安装](AGENT-INSTALL.md)，复制首页指令让 Agent 准备文件。
+不想手动安装？把[首页的一句话](../README.md#让-agent-帮你安装)发给 ZCode / Codex / WorkBuddy，其余交给 Agent。
 
 ## 下载插件
 
@@ -18,9 +18,17 @@
 
 macOS 默认快捷键是 `Control+Shift+Y`；可在 `chrome://extensions/shortcuts` 修改。
 
-## 自动转录
+## 可选：本机语音转文字
 
-按 README 的 Python 步骤安装依赖和模型后，运行 `python scripts/transcription_server.py` 并保持终端运行。Windows 也可以在安装 Node.js 后用 `npm run voice` 启动后台服务。服务地址为 `http://127.0.0.1:4318/health`。
+需要 Python 3.10+。在项目源码目录执行以下命令；macOS / Linux 若没有 `python`，改用 `python3`。推荐使用独立虚拟环境。
+
+```bash
+python -m pip install -r scripts/requirements-voice.txt
+python -c "from faster_whisper import WhisperModel; WhisperModel('small', device='cpu', compute_type='int8')"
+python scripts/transcription_server.py
+```
+
+首次下载模型需要网络；之后使用本机缓存。保持服务运行，检查 `http://127.0.0.1:4318/health` 返回 `ready: true`，再在侧栏点「转录整场 / 重试」。Windows 也可以在安装 Node.js 后用 `npm run voice` 启动后台服务。
 
 可用环境变量 `VIBE_WHISPER_MODEL` 选择另一个已缓存的模型。没有缓存时服务会报错，不会自动下载模型。转录可能慢于录音长度；关闭侧栏不会终止本机已提交的任务。
 

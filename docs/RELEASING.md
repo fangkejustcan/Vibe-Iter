@@ -32,6 +32,10 @@ README 的固定下载入口使用 `releases/latest/download/vibe-iter-chrome.zi
 
 ## 视频展示
 
-README 使用图片封面链接到仓库中提供的 1080p MP4。GitHub 对普通仓库文件的 README 内嵌播放器支持有限，这个入口可打开或下载视频。若要显示 GitHub 原生播放器，可在 GitHub 编辑 README 时上传 `docs/assets/demo.mp4`，把实际生成的 `user-attachments` 地址放到封面下方；不要手写不存在的附件地址。
+视频放在 README Header 正下方，早于安装入口。当前封面提供 1080p 原片文件链接；它是文件下载入口，不是内嵌播放器。17 MB 的原片在仓库 `blob/main` 页面也不提供文件预览，不要把这种链接标成「在线播放」。
+
+README 内的原生播放器需要 GitHub 网页上传生成的真实视频附件链接；普通仓库链接和手写 `<video>` 会被过滤为非播放器内容。通过 GitHub 的 README 编辑器上传视频，拿到生成的 `user-attachments` 链接后，将 `demo-video:start` 与 `demo-video:end` 注释之间的内容替换为独占一段的附件链接，并验证实际播放。SSH 推送权限不等同于网页附件上传会话。
+
+附件大小上限取决于 GitHub 账号方案；必要时将预览转为小于 10 MB 的 H.264/AAC MP4，1080p 原片继续保留在仓库与 Release 中。不要手写不存在的附件地址。
 
 视频单独保存在源码仓库及 Release 中，不进入插件 ZIP。更换演示视频前，检查音频、画面、浏览器界面、字幕和媒体元数据。

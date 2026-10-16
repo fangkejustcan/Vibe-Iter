@@ -34,7 +34,7 @@ python scripts/package_smoke.py
 
 `package_smoke.py` 直接解压并加载发行 ZIP，使用假麦克风、阻断转录服务，验证关闭 UI 后持续录制、截图和完整 ZIP 导出。先运行 `npm run package`。
 
-Whisper 整场回归需先按 README 配置并启动本机服务：
+Whisper 整场回归需先按[安装文档](INSTALLATION.md#可选本机语音转文字)配置并启动本机服务：
 
 ```bash
 python scripts/session_recording_smoke.py --seconds 16
