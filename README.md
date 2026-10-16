@@ -7,7 +7,8 @@
 </div>
 
 <!-- demo-video:start -->
-[![90 秒演示：吐槽，就是需求](docs/assets/demo-cover.png)](https://github.com/fangkejustcan/Vibe-Iter/raw/refs/heads/main/docs/assets/demo.mp4)
+
+https://github.com/user-attachments/assets/a40f87cc-aa54-4dc3-b161-6ebcab5750e0
 
 **90 秒演示 · 中文原声与字幕** · [1080p 原片](https://github.com/fangkejustcan/Vibe-Iter/raw/refs/heads/main/docs/assets/demo.mp4)
 <!-- demo-video:end -->

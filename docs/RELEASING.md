@@ -32,7 +32,7 @@ README 的固定下载入口使用 `releases/latest/download/vibe-iter-chrome.zi
 
 ## 视频展示
 
-视频放在 README Header 正下方，早于安装入口。当前封面提供 1080p 原片文件链接；它是文件下载入口，不是内嵌播放器。17 MB 的原片在仓库 `blob/main` 页面也不提供文件预览，不要把这种链接标成「在线播放」。
+视频放在 README Header 正下方，早于安装入口。当前使用 GitHub 视频附件显示原生播放器，并保留 1080p 原片下载链接。17 MB 的原片在仓库 `blob/main` 页面不提供文件预览，不要把这种链接标成「在线播放」。
 
 README 内的原生播放器需要 GitHub 网页上传生成的真实视频附件链接；普通仓库链接和手写 `<video>` 会被过滤为非播放器内容。通过 GitHub 的 README 编辑器上传视频，拿到生成的 `user-attachments` 链接后，将 `demo-video:start` 与 `demo-video:end` 注释之间的内容替换为独占一段的附件链接，并验证实际播放。SSH 推送权限不等同于网页附件上传会话。
 
