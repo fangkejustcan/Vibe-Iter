@@ -111,6 +111,7 @@ export interface FeedbackNote {
 export interface RecordingSession {
   id: string
   projectName: string
+  projectPath?: string
   startedAt: number
   endedAt?: number
   status: RecorderStatus
@@ -134,7 +135,7 @@ export interface ActiveTab {
 }
 
 export type RuntimeMessage =
-  | { type: 'START_RECORDING'; projectName: string }
+  | { type: 'START_RECORDING'; projectName: string; projectPath?: string }
   | { type: 'PAUSE_RECORDING' }
   | { type: 'STOP_RECORDING' }
   | { type: 'ADD_NOTE'; text: string; tabId?: number }

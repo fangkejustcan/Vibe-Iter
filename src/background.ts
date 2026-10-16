@@ -143,7 +143,7 @@ function automaticNotes(current: RecordingSession) {
   current.notes.sort((a, b) => a.at - b.at)
 }
 
-async function startRecording(projectName: string): Promise<RuntimeResponse> {
+async function startRecording(projectName: string, projectPath?: string): Promise<RuntimeResponse> {
   if (session?.status === 'recording') return { ok: false, error: '测试正在进行，请先结束本场。' }
   const tab = await activeTab()
   if (!tab || !/^https?:/.test(tab.url || '')) return { ok: false, error: '请先切换到要试玩的 HTTP/HTTPS 游戏页面。' }
@@ -155,7 +155,7 @@ async function startRecording(projectName: string): Promise<RuntimeResponse> {
     await chrome.tabs.create({ url: `${chrome.runtime.getURL('microphone.html')}?returnTab=${tab.id}` })
     return { ok: false, error: `无法开始录音：${result?.error || '录音器未响应'}。请在已打开的麦克风页面授权，然后回到游戏重试。` }
   }
-  session = { id, projectName: projectName.trim() || 'Playtest', tabId: tab.id, startedAt: result.startedAt,
+  session = { id, projectName: projectName.trim() || 'Playtest', projectPath: projectPath?.trim() || undefined, tabId: tab.id, startedAt: result.startedAt,
     status: 'recording', startPage: context, events: [], frames: [], transcript: [], notes: [], audio: result.audio,
     transcription: { status: 'pending' } }
   eventIds.clear()
@@ -212,7 +212,7 @@ async function stopRecording(): Promise<RuntimeResponse> {
 async function handleMessage(message: RuntimeMessage, sender: chrome.runtime.MessageSender): Promise<RuntimeResponse> {
   await loadSession()
   switch (message.type) {
-    case 'START_RECORDING': return startRecording(message.projectName)
+    case 'START_RECORDING': return startRecording(message.projectName, message.projectPath)
     case 'STOP_RECORDING': return stopRecording()
     case 'PAUSE_RECORDING': return { ok: false, error: '全程记录模式不暂停；请用结束测试保存整场。' }
     case 'GET_SESSION': {
@@ -297,7 +297,7 @@ chrome.commands.onCommand.addListener((command) => {
     await loadSession()
     if (command === 'toggle-recording') {
       if (session?.status === 'recording') await stopRecording()
-      else await startRecording(session?.projectName || 'Playtest')
+      else await startRecording(session?.projectName || 'Playtest', session?.projectPath)
     }
     if (command === 'add-note') await handleMessage({ type: 'ADD_NOTE', text: '' }, {})
   }).catch(console.error)

@@ -32,7 +32,7 @@ python scripts/legacy_export_smoke.py
 python scripts/package_smoke.py
 ```
 
-`package_smoke.py` 直接解压并加载发行 ZIP，使用假麦克风、阻断转录服务，验证关闭 UI 后持续录制、截图和完整 ZIP 导出。先运行 `npm run package`。
+`package_smoke.py` 可独立运行，无需开发服务器；它通过浏览器路由提供 fixture，直接解压并加载发行 ZIP。使用假麦克风、阻断转录服务，验证关闭 UI 后持续录制、截图、自动落盘与实际地址、复制提示词、切换标签页、重复导出不覆盖、重开侧栏和历史隔离，以及文件删除后禁止复制。先运行 `npm run package`；复制测试仅捕获合成提示词，不读取系统剪贴板。
 
 Whisper 整场回归需先按[安装文档](INSTALLATION.md#可选本机语音转文字)配置并启动本机服务：
 

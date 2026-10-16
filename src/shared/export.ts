@@ -50,9 +50,11 @@ export function sessionToMarkdown(session: RecordingSession): string {
   return [
     `# Vibe Iter 试玩迭代记录：${quote(session.projectName)}`,
     '',
-    '> 这份记录由 Vibe Iter 生成。请把每条意见当作一个独立的实现任务，先结合页面、目标元素、坐标和附近操作定位，再修改代码。',
+    '> 先核对当前对话任务、实际项目 / worktree 与下方测试页 URL、端口。URL / 端口可能被复用，不能单凭相同就确认归属。不匹配或无法确认时停止修改，提醒用户可能粘贴错会话，等待确认。确认匹配后，把这份记录作为一次完整迭代综合处理。',
     '',
     `- Session：\`${session.id}\``,
+    `- 项目 / worktree：${session.projectPath ? quote(session.projectPath) : '未提供，需核对当前对话与工作目录'}`,
+    `- 开始页 URL：${session.startPage?.url || '未知，需核实'}`,
     `- 开始：${new Date(session.startedAt).toLocaleString()}`,
     `- 时长：${duration.toFixed(1)} 秒`,
     `- 事件：${session.events.length} 条`,
@@ -61,7 +63,7 @@ export function sessionToMarkdown(session: RecordingSession): string {
     '',
     '## 执行要求',
     '',
-    '1. 逐条处理下面的反馈，不要遗漏同一 session 中的其他意见。',
+    '1. 把下面的录音、反馈、截图和操作时间线视为同一次完整迭代，综合判断并完成整体修改；不要把反馈拆成互不相关的任务后只做一部分。',
     '2. 页面是 Canvas 时，优先使用截图、Canvas 相对坐标和可见文本定位；DOM selector 只代表 Canvas 容器。',
     '3. 修改前后运行项目已有的构建或测试命令，并在完成后说明无法确定的定位。',
     '',
@@ -89,21 +91,22 @@ export function downloadText(filename: string, value: string, mime = 'text/plain
   return downloadBlob(filename, new Blob([value], { type: mime }))
 }
 
-export async function downloadBlob(filename: string, blob: Blob): Promise<number> {
+export async function downloadBlob(filename: string, blob: Blob, saveAs = true): Promise<number> {
   if (!blob.size) throw new Error('文件内容为空，未创建下载。')
   const url = URL.createObjectURL(blob)
   try {
     if (!chrome.downloads?.download) throw new Error('扩展缺少下载权限，请在 chrome://extensions 刷新插件后重试。')
-    return await chrome.downloads.download({ url, filename, saveAs: true })
+    return await chrome.downloads.download({ url, filename, saveAs, conflictAction: 'uniquify' })
   } finally { window.setTimeout(() => URL.revokeObjectURL(url), 60_000) }
 }
 
-export async function downloadSessionZip(session: RecordingSession): Promise<void> {
+export async function createSessionZip(session: RecordingSession, extraFiles: Record<string, string> = {}): Promise<Blob> {
   const audio = await getAudioBlob(session.id)
   const files: Zippable = {
     'session.json': strToU8(JSON.stringify(session, null, 2)),
     'report.md': strToU8(sessionToMarkdown(session)),
   }
+  for (const [name, text] of Object.entries(extraFiles)) files[name] = strToU8(text)
   if (audio.size) files['audio.webm'] = [new Uint8Array(await audio.arrayBuffer()), { level: 0 }]
   else files['AUDIO-MISSING.txt'] = strToU8('这场记录没有保存整场原始音频。包中仅包含现存操作、文字和截图，不能从中还原未录下的声音。请刷新扩展并重新开始测试，确认“录音已验证”及音量条随说话变化。')
   for (const frame of session.frames || []) {
@@ -111,10 +114,20 @@ export async function downloadSessionZip(session: RecordingSession): Promise<voi
     const data = await fetch(frame.screenshot).then((response) => response.arrayBuffer())
     files[`screenshots/${frame.id}.jpg`] = [new Uint8Array(data), { level: 0 }]
   }
-  files['README.txt'] = strToU8('audio.webm 是完整原始录音，包含静音；session.json 是完整结构化记录；report.md 包含自动关联画面和操作的语音反馈。所有时间均以 session.startedAt 为基准。screenshots/ 文件名对应 frames[].id。鼠标移动采样约 100ms，自动截图约 5 秒及关键操作触发；不是逐帧录像。请将整个压缩包解压后交给 Codex。')
+  files['README.txt'] = strToU8([
+    '先核对当前对话任务、项目 / worktree 与测试页 URL、端口。不匹配或无法确认时停止修改，提醒用户可能粘贴错会话，等待确认；相同端口不等于同一项目或 worktree。',
+    '本场所有录音、操作、截图和反馈属于一次完整迭代，需要综合分析、完成整体修改并统一验证；不要拆成互不相关的任务后只做一部分。',
+    'audio.webm 是完整原始录音，包含静音；session.json 是完整结构化记录；report.md 包含反馈。请结合原音分析，没有转录不等于没有意见。',
+    '若有 HANDOFF.json / HANDOFF.md，先读取本次导出快照与交接说明，其中 ZIP 地址相对于 Chrome 下载目录，复制提示词会提供实际完整地址。',
+    '所有时间均以 session.startedAt 为基准。screenshots/ 文件名对应 frames[].id。鼠标移动采样约 100ms，自动截图约 5 秒及关键操作触发；不是逐帧录像。',
+  ].join('\n\n'))
   // Store entries without worker-based compression, which extension CSP can block.
   const result = await new Promise<Uint8Array>((resolve, reject) => zip(files, { level: 0 }, (error, data) => error ? reject(error) : resolve(data)))
-  await downloadBlob(sessionFileName(session, 'zip'), new Blob([result as Uint8Array<ArrayBuffer>], { type: 'application/zip' }))
+  return new Blob([result as Uint8Array<ArrayBuffer>], { type: 'application/zip' })
+}
+
+export async function downloadSessionZip(session: RecordingSession): Promise<void> {
+  await downloadBlob(sessionFileName(session, 'zip'), await createSessionZip(session))
 }
 
 export function transcriptPreview(transcript: TranscriptSegment[]): string {

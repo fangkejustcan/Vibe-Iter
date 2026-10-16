@@ -5,6 +5,7 @@ import { formatDuration } from '../shared/ids'
 import { getAudioBlob, getSession, listSessions } from '../shared/database'
 import { downloadBlob, downloadSessionZip, downloadText, sessionFileName, sessionToMarkdown } from '../shared/export'
 import { BUILD_VERSION, RECORDER_PROTOCOL, RELOAD_MESSAGE } from '../shared/protocol'
+import HandoffPanel from './HandoffPanel'
 
 async function message(value: unknown): Promise<RuntimeResponse> { return chrome.runtime.sendMessage(value) }
 const size = (bytes: number) => `${(bytes / 1024 / 1024).toFixed(2)} MB`
@@ -13,6 +14,7 @@ function App() {
   const [session, setSession] = useState<RecordingSession | null>(null)
   const [history, setHistory] = useState<Awaited<ReturnType<typeof listSessions>>>([])
   const [projectName, setProjectName] = useState('my-playtest')
+  const [projectPath, setProjectPath] = useState('')
   const [noteText, setNoteText] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState('')
@@ -93,7 +95,7 @@ function App() {
   const start = () => act('正在启动麦克风…', async () => {
     const ready = await send({ type: 'GET_SESSION', summary: true })
     if (!ready.ok) throw new Error(RELOAD_MESSAGE)
-    const result = await send({ type: 'START_RECORDING', projectName })
+    const result = await send({ type: 'START_RECORDING', projectName, projectPath })
     if (!result.session?.audio?.bytes || result.session.audio.status !== 'recording') throw new Error('没有音频落盘，无法确认录制已启动，请结束测试并检查麦克风。')
     selected.current = result.session?.id || ''; loadedVersion.current = ''
     setSession(result.session || null)
@@ -129,6 +131,7 @@ function App() {
     <section className="hero-panel"><div className="hero-copy"><p className="section-kicker">PRESS START. PLAY. TALK.</p><p className="hero-title">专心玩，随时说。<br /><em>整场都会留下。</em></p><p className="hero-subtitle">开始后持续保存语音、操作和关键画面；结束后自动转录，整理为 Codex 可读的反馈。</p></div><Activity size={22} color="var(--aqua)" /></section>
     <section className="control-panel">
       <label className="field-label" htmlFor="project-name">项目名称</label><input id="project-name" className="project-input" value={projectName} disabled={live} onChange={(event) => setProjectName(event.target.value)} />
+      <details className="project-details"><summary>项目 / worktree 路径（可选）</summary><label className="field-label" htmlFor="project-path">用于帮助 Agent 核对当前工作目录</label><input id="project-path" className="project-input" value={projectPath} disabled={live} onChange={(event) => setProjectPath(event.target.value)} placeholder="可粘贴本次测试对应的项目或 worktree 完整路径" /></details>
       <div className="control-row">{live ? <button className="button button-accent stop" onClick={() => void stop()} disabled={!!busy}><Square size={14} />结束测试</button> : <button className="button button-primary" onClick={() => void start()} disabled={!!busy || !compatible}><CirclePlay size={15} />开始测试</button>}<span className="duration">{duration}</span></div>
       <p className="speech-status">{busy || (recording ? '侧栏可以关闭，录音与交互继续保存。' : '只需开始与结束，无需手动保存语音意见。')}</p>
       <a className="microphone-link" href={chrome.runtime.getURL('microphone.html')} target="_blank" rel="noreferrer">麦克风授权与设备测试 ↗</a><p className="helper">快捷键 Ctrl + Shift + Y 开始 / 结束测试</p>
@@ -148,7 +151,8 @@ function App() {
       <section className="timeline-panel"><div className="panel-heading"><div><p className="section-kicker">AUTO-LINKED FEEDBACK</p><h2>语音与反馈</h2></div><span className="count-badge">{session.transcript.length} 段</span></div>
         {recording ? <p className="speech-status">{verified ? '音频正在持续保存，结束测试后自动转录。' : '尚未确认音频持续保存，请检查录音状态。'}</p> : session.notes.length ? <div className="notes-list">{session.notes.map((note) => <article className="note-row" key={note.id}><span className="note-marker" /><div className="note-content"><div className="note-meta"><time>+{formatDuration(session.startedAt, note.at)}</time><span>{note.source === 'automatic' ? '自动关联画面与操作' : '文字标记'}</span></div><p>{note.text}</p><small>{note.target?.selector || note.page.path} · {note.nearbyEvents.length} 条附近操作</small></div></article>)}</div> : <div className="empty-state compact"><Archive size={18} /><p>{!audio?.bytes ? '没有完整原始录音，也没有已保存的语音文字。' : transcription?.status === 'complete' ? '转录未识别到语音，可播放原始录音核对。' : '原始录音可以直接播放和导出；转录完成后会自动出现带时间的反馈。'}</p></div>}
       </section>
-      <section className="control-panel"><div className="panel-heading"><h2>交给 Codex</h2><Archive size={18} /></div><button className="button button-primary" disabled={recording || !!busy} onClick={() => void exportFile('zip')}><Download size={14} />{audio?.bytes ? '导出完整包 ZIP' : '导出现存记录 ZIP'}</button><p className="helper">{audio?.bytes ? '包含完整录音、全部操作、截图、转录和反馈报告。' : '本场缺少完整录音，仅导出已存在的操作、文字和截图。'}</p><div className="control-row"><button className="button export-button" disabled={recording || !!busy} onClick={() => void exportFile('md')}><FileText size={13} />Markdown</button><button className="button export-button" disabled={recording || !!busy} onClick={() => void exportFile('json')}><FileJson size={13} />JSON</button></div></section>
+      <HandoffPanel key={session.id} session={session} disabled={live || !!busy} run={act} />
+      <details className="control-panel extra-exports"><summary>更多导出方式</summary><div className="control-row"><button className="button export-button" disabled={live || !!busy} onClick={() => void exportFile('zip')}><Download size={13} />另存 ZIP</button><button className="button export-button" disabled={live || !!busy} onClick={() => void exportFile('md')}><FileText size={13} />Markdown</button><button className="button export-button" disabled={live || !!busy} onClick={() => void exportFile('json')}><FileJson size={13} />JSON</button></div></details>
     </>}
     {!!history.length && <section className="control-panel"><label className="field-label" htmlFor="session-history">本地历史 · 新测试不会覆盖旧记录</label><select id="session-history" className="session-history" value={session?.id || ''} disabled={live || !!busy} onChange={(event) => { selected.current = event.target.value; loadedVersion.current = ''; void refresh() }}>{history.map((item) => <option key={item.id} value={item.id}>{new Date(item.startedAt).toLocaleString()} · {item.projectName}</option>)}</select></section>}
     <p className="privacy-note">本地保存 · 鼠标移动约 100ms 采样 · 画面约 5s 及关键操作采样</p>

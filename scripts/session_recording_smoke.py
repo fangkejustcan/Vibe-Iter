@@ -199,7 +199,7 @@ def main():
             download_directory = Path(tempfile.mkdtemp(prefix='downloads-', dir=ROOT / '.local'))
             cdp = context.new_cdp_session(control)
             cdp.send('Browser.setDownloadBehavior', {'behavior': 'allow', 'downloadPath': str(download_directory)})
-            panel.evaluate("Array.from(document.querySelectorAll('button')).find(b=>b.textContent.includes('导出完整包')).click()")
+            panel.evaluate("() => {document.querySelector('.extra-exports').open=true; Array.from(document.querySelectorAll('button')).find(b=>b.textContent.includes('另存 ZIP')).click()}")
             until = time.monotonic() + 120
             while time.monotonic() < until:
                 downloads = list(download_directory.glob('*.zip'))

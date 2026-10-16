@@ -18,7 +18,7 @@ npm run export:public -- .local/open-source-next
 保持 `package.json`、`public/manifest.json`、`src/shared/protocol.ts` 和 `package-lock.json` 的版本一致。构建验证后推送 `v` 开头的版本标签：
 
 ```bash
-git tag v0.3.2
+git tag v0.4.0
 git push origin main --tags
 ```
 

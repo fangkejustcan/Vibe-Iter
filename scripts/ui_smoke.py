@@ -1,5 +1,6 @@
 """Small-width UI verification in a real extension, with a synthetic mic."""
 from pathlib import Path
+import json
 import tempfile
 from playwright.sync_api import expect, sync_playwright
 
@@ -19,7 +20,8 @@ def main():
             panel = context.new_page(); panel.goto(f'{origin}/sidepanel.html')
             errors = []
             panel.on('pageerror', lambda error: errors.append(str(error)))
-            expect(panel.get_by_text('v0.3.2 全程记录版')).to_be_visible()
+            version = json.loads((ROOT / 'package.json').read_text(encoding='utf-8'))['version']
+            expect(panel.get_by_text(f'v{version} 全程记录版')).to_be_visible()
             game = context.new_page(); game.goto('http://127.0.0.1:4173/game.html')
             game.bring_to_front()
             panel.evaluate("() => document.querySelector('.button-primary').click()")

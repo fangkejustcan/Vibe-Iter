@@ -1,7 +1,7 @@
 {
   "name": "vibe-iter",
   "private": true,
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "Local-first Chrome playtest recorder. Play, talk, and hand the context to your coding agent.",
   "license": "MIT",
   "engines": { "node": ">=20" },

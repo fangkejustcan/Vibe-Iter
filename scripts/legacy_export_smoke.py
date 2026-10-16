@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main():
     with sync_playwright() as p:
-        context = p.chromium.launch_persistent_context(tempfile.mkdtemp(prefix='vibe-legacy-'), headless=False,
+        context = p.chromium.launch_persistent_context(tempfile.mkdtemp(prefix='vibe-legacy-'), headless=True, channel='chromium',
             accept_downloads=True, viewport={'width': 340, 'height': 860}, args=[
                 f'--load-extension={ROOT / "dist"}', f'--disable-extensions-except={ROOT / "dist"}',
             ])
@@ -35,9 +35,10 @@ def main():
             assert panel.evaluate('() => window.__starts') == 0
             expect(panel.get_by_test_id('audio-status')).to_contain_text('没有保存整场录音')
             expect(panel.locator('audio')).to_have_count(0)
+            panel.locator('.extra-exports summary').click()
             # Record is deliberately absent from IndexedDB, reproducing the old silent return.
             with panel.expect_download() as info:
-                panel.get_by_role('button', name='导出现存记录 ZIP').click()
+                panel.get_by_role('button', name='另存 ZIP', exact=True).click()
             artifact = ROOT / '.local' / 'legacy-export.zip'
             info.value.save_as(str(artifact))
             with zipfile.ZipFile(artifact) as archive:
@@ -50,7 +51,7 @@ def main():
             # Large text export remains valid without a blob worker under MV3 CSP.
             panel.evaluate("() => {window.__legacy.transcript=[{id:'large',at:Date.now(),final:true,text:'feedback '.repeat(150000)}]}")
             with panel.expect_download() as info:
-                panel.get_by_role('button', name='导出现存记录 ZIP').click()
+                panel.get_by_role('button', name='另存 ZIP', exact=True).click()
             info.value.save_as(str(artifact))
             with zipfile.ZipFile(artifact) as archive:
                 assert archive.testzip() is None
